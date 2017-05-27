@@ -1,0 +1,601 @@
+﻿Imports System
+Imports System.IO
+Imports System.Drawing
+Imports System.Windows.Forms
+Imports clsImg = GameEngine.v2.clsImg
+
+Public Class frmCanvas
+#Region "Main Declaration"
+    Public mainForm As Object = Me
+    Dim imgDir = "C:\Users\Public\ImgDir"
+    Private animatedImage As New Bitmap(Image.FromFile(imgDir & "\Person\iron-walk.gif"))
+    Private currentlyAnimating As Boolean = False
+    'Public LOPerson As New List(Of struPerson)()
+    Public CountTO As Integer = 10
+    Dim MoveModeTF As Boolean = False
+    Dim SizeModeTF As Boolean = False
+
+    Public WithEvents lblInfo As New Label With {.Parent = Me, .Name = "lblInfo", _
+    .Text = "lblInfo", .AutoSize = True, _
+    .Font = New System.Drawing.Font("Arial", 12, FontStyle.Bold), _
+    .Location = New Point(.Width * 2, 0), _
+    .BackColor = Color.Black, _
+    .ForeColor = Color.Red}
+
+
+    Dim WithEvents timInvalidate As New Timer
+#End Region
+
+    Private Sub frmCanvas_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        WindowState = FormWindowState.Maximized
+        CenterToScreen()
+        KeyPreview = True
+        DoubleBuffered = True
+        AllowDrop = True
+        ControlBox = True
+        MinimizeBox = False
+        MaximizeBox = True
+        Text = ""
+        FormBorderStyle = Windows.Forms.FormBorderStyle.FixedSingle
+        Top = 0
+
+        BackgroundImage = Image.FromFile("C:\Users\Public\ImgDir\Terrain\image 82.jpg")
+        BackgroundImageLayout = ImageLayout.Stretch
+        ContextMenuStrip = cmsMain
+
+        panControls.Hide()
+
+        Create_New()
+        Start()
+
+        timInvalidate.Start()
+        For i = 0 To LOImg.Count - 1
+            cmbElement.Items.Add(i)
+        Next
+
+    End Sub
+
+    Private Sub timInvalidate_Tick(ByVal sender As Object, ByVal e As System.EventArgs) Handles timInvalidate.Tick
+        Invalidate()
+
+        With LOImg(mainForm.activeImgIdx)
+            lblInfo.Text = .Name & "-" & .ID & vbCrLf _
+                & .Left & "x" & .Top & vbCrLf _
+                & Top & "," & Right & vbCrLf _
+                & Width & "," & Height & vbCrLf _
+                & .Size.ToString
+
+            lblSize.Text = .Size.ToString()
+            lblLocation.Text = .Location.ToString
+            lblSR.Text = .gifSR
+            lblName.Text = .Name
+
+            If SizeModeTF Then
+                ' nudSR.Value = .gifSR / 1
+                'tbSR.Value = (.gifSR Mod 1) * 10
+                .gifSR = nudSR.Value + (tbSR.Value / 10)
+                Label6.Text = tbSR.Value / 10
+                .Set_Size()
+            End If
+
+ 
+        End With
+
+    End Sub
+
+    Private Sub frmCanvas_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles Me.KeyDown
+        If mainForm.activeImgIdx < 0 Then Exit Sub
+        If MoveModeTF Then
+            Select Case e.KeyCode
+                Case Keys.Left
+                    LOImg(mainForm.activeImgIdx).Left -= 1
+                Case Keys.Right
+                    LOImg(mainForm.activeImgIdx).Left += 1
+                Case Keys.Up
+                    LOImg(mainForm.activeImgIdx).Top -= 1
+                Case Keys.Down
+                    LOImg(mainForm.activeImgIdx).Top += 1
+            End Select
+        End If
+        If SizeModeTF Then
+
+        End If
+    End Sub
+
+    '## Class clsImg MAIN SECTION ##
+#Region "clsImg Main Section"
+#Region "clsImg Main Declaration"
+    Public LOImg As New List(Of clsImg)()
+    Public CountToImg As Integer = 0
+    Public idxImg As Integer = 0
+    Public maxImg As Integer = 0
+    Public arrImg() As clsImg
+    Public activeImgIdx As Integer = -1
+    Public CountHowMany As Integer = 0
+    Public iAngle As Integer = 0
+    Dim _RecNO As Integer = -1
+#End Region
+
+    Private Sub Create_Newsssss()
+        Dim speedLR As Integer = 10
+        Dim MainImageDir As String = "C:\Users\Public\ImgDir"
+        Dim BGI As String = MainImageDir & "\Person\iron-walk.gif"
+        Dim top As Integer = 150
+        Dim SR As Double = 1
+        Dim Name As String = ""
+        Dim CA As Boolean = True
+        Dim TI As Integer = 100
+
+        For i = 0 To CountTO
+            'Quick_Draw_Images(i)
+            Name = "IM" + i.ToString
+            Select Case i
+                Case 0
+                    speedLR = 50
+                    SR = 0.35
+                    BGI = MainImageDir & "\Person\Flash Run Extremly Fast.gif"
+                    top = 10
+                    Name = "Flash"
+                Case 1
+                    speedLR = 20
+                    SR = 0.2
+                    BGI = MainImageDir & "\space\Interceptor 1 (UFO Series).png"
+                    top = 30
+                    Name = "Interceptor 1"
+                Case 2
+                Case 3
+
+                Case 4
+                Case 10
+
+            End Select
+
+            Create_New()
+        Next
+    End Sub
+
+    Private Sub Create_New()
+        Dim MainImageDir As String = "C:\Users\Public\ImgDir"
+        Dim FN As String = ""
+        Dim j As Integer = 0
+        Dim Nme As String = ""
+        Dim CountTO As Integer = 4
+
+        Dim Flip As Boolean = False
+        Dim rotateTF As Boolean = False
+        Dim CA As Boolean = True
+        Dim Disposed As Boolean = False
+        Dim ShowidTF As Boolean = False
+        Dim DrawRectTF As Boolean = False
+
+        Dim RE As Boolean = False  ' RandomEntry (Random Top)
+        Dim minRET As Integer = 0
+        Dim maxRET As Integer = 0 'min,max random Entry top (.minRandomTop, maxRandomTop)
+
+
+        Dim SR As Single = 1
+        Dim op As Single = 1
+
+        Dim Energy As Integer = 0
+        Dim Cat As String = ""
+
+        Dim L As Integer = 0
+        Dim T As Integer = 0
+        Dim W As Integer = 0
+        Dim H As Integer = 0
+
+        Dim TI As Integer = 100 'Timer Interval for timFrames (GIF's)
+
+        Dim seqMoveLR As Integer = 99
+        Dim seqMoveUD As Integer = 99
+        Dim seqMoveDia As Integer = 99
+
+        Dim speedLR As Integer = 5
+        Dim speedUD As Integer = 3
+        'Dim speedDia As Integer = 5
+
+        For i = 0 To CountTO
+            j = i
+            FN = MainImageDir & "\Person\iron-walk.gif"
+            Cat = "IM"
+            Nme = "IM" & i.ToString()
+
+            Select Case i
+                Case 0
+                    SR = 1
+                    FN = MainImageDir & "\Foreground\Base01.png"
+                    Top = -8
+                    Nme = "Base"
+                    Cat = "Fixed Asset"
+                    'seqMoveLR = EAST
+                Case 1
+                    speedLR = 50
+                    SR = 0.35
+                    FN = MainImageDir & "\Person\Flash Run Extremly Fast.gif"
+                    Top = 10
+                    Nme = "Flash"
+                    Cat = ""
+                    TI = 10
+                    'seqMoveLR = EAST
+                Case 2
+                    speedLR = 20
+                    SR = 0.2
+                    FN = MainImageDir & "\space\Interceptor 1 (UFO Series).png"
+                    Top = 30
+                    Nme = "Interceptor 1"
+                    Cat = ""
+                    CA = False
+                    seqMoveLR = EAST
+                Case 3
+
+                Case 4
+                Case 10
+
+            End Select
+            W = Image.FromFile(FN).Width ' * SR
+            H = Image.FromFile(FN).Height ' * SR
+            If Cat = "IM" Then T = Me.Bottom - H - 30 : seqMoveLR = EAST : SR = 0.5
+            Try
+                Quick_Draw_Images(i, FN, Nme, _
+                                  Flip, rotateTF, _
+                                  CA, Cat, _
+                                  seqMoveLR, seqMoveUD, seqMoveDia, _
+                                  speedLR, speedUD, _
+                                  SR, TI, _
+                                  L, T, _
+                                  W, H)
+
+                With LOImg(i)
+                    .gifOpacity = op
+                    .Energy = Energy
+                    .Disposed = Disposed
+                    .showidTF = ShowidTF
+
+                    '.Fixed = False
+                    .DrawRectTF = DrawRectTF
+
+                    .RandomEntry = RE
+                    .minRandomTop = minRET
+                    .maxRandomTop = maxRET
+                    .Show_ID()
+
+                    If Path.GetExtension(.gifBGI) = ".gif" Then .continuousAnimation = True : .stopAnimation = False
+                    If .flipMe Then .gifImage = Flip_Me("RotateNoneFlipX", .gifImage)
+
+                    .Set_Interval(.TI)
+                    ' .timCombined.Start()
+                    '.timMovement.Start()
+                End With
+
+            Catch ex As Exception
+                MsgBox("Create_New" & vbCrLf & j & vbCrLf & ex.Message)
+                'If ex.Message.Contains("Index was out of range") Then timWarning.Start() : grpWarningGroup.Hide()
+            End Try
+
+
+
+            '## Reset Variables #
+            FN = ""
+            j = 0
+            Nme = ""
+            CountTO = 9
+            Flip = False
+            rotateTF = False
+            DrawRectTF = False
+            CA = True
+            Disposed = False
+
+            SR = 1
+            op = 1
+
+            Energy = 0
+
+            RE = False
+            minRET = 0
+            maxRET = 0
+
+            seqMoveLR = 99
+            seqMoveUD = 99
+            seqMoveDia = 99
+
+            speedLR = 5
+            speedUD = 3
+            TI = 100
+            L = 0 : T = 0 : W = 0 : H = 0
+
+        Next
+    End Sub
+
+    Private Sub Quick_Draw_Images(ByVal i As Integer, ByVal theFile As String, ByVal Nme As String, _
+                                  ByVal Flip As Boolean, ByVal rotateTF As Boolean, _
+                                  ByVal CA As Boolean, ByVal Cat As String, _
+                                  ByVal seqMoveLR As Integer, ByVal seqMoveUD As Integer, ByVal seqMoveDia As Integer, _
+                                  ByVal speedLR As Integer, ByVal speedUD As Integer,
+                                  ByVal SR As Double, ByVal TI As Integer, _
+                                  ByVal L As Integer, ByVal T As Integer, _
+                                  ByVal W As Integer, ByVal H As Integer)
+
+        Dim FN As String = theFile
+
+        Dim GI As Image
+        Dim OP As Single = 1 'opacity
+
+        Dim MF As Integer = 1 'maxFrames
+        Dim SN As Integer = 0 'next action seqNext
+        Dim fixedFrame As Integer = 0
+        Dim SA As Integer = 0 'seqaction
+        Dim MC As Integer = 30 'mastercount
+
+        Dim Bounce As Boolean = False
+        Dim hasFrames As Boolean = False
+        Dim Fixed As Boolean = False
+        Dim Disposed As Boolean = False
+        Dim Docked As Boolean = False
+        Dim ShowID As Boolean = False
+        'Dim Flip As Boolean = False
+        Dim FlipUD As Boolean = False
+        Dim RE As Boolean = False 'randomEntry
+        Dim isCharTF As Boolean = False
+        Dim Action As String = ""
+        Dim RecNO As Integer = -1
+        Dim ssmTF As Boolean = False 'set size manually
+
+        If Nme = "" Then Name = Path.GetFileNameWithoutExtension(theFile) Else Name = Nme
+        GI = Image.FromFile(FN)
+        'L = Cursor.Position.X
+        'T = Cursor.Position.Y
+        'W = (GI.Width / MF) * SR 'used fro sprite sheet with frames
+        'H = GI.Height * SR
+
+
+        '## Bridge ##
+        'If i > CountToImg Then Exit Sub
+
+        LOImg.Add(New clsImg(Me))
+        With LOImg(i)
+            .mainForm = Me
+            .Frm = Me
+            .ID = i
+            .RecNo = _RecNO
+            .Name = Name
+            .Category = Cat
+            .Action = Action
+
+            '.maxFrames = MF
+            .gifSR = SR
+            .gifBGI = FN
+            .gifImage = SafeImageFromFile(.gifBGI)
+
+            .Left = L
+            .Top = T
+            .Width = W  '(.gifImage.Width / .maxFrames) * .gifSR
+            .Height = H
+            .setSizeManuallyTF = ssmTF
+            .SpeedLR = speedLR
+            .SpeedUD = speedUD
+
+            .seqMoveLR = seqMoveLR
+            .seqMoveUD = seqMoveUD
+            .seqNext = SN
+            .TI = TI
+
+            '.hasFrames = hasFrames
+            .flipMe = Flip
+            .flipUD = FlipUD
+            .DockedTF = Docked
+            .Disposed = Disposed
+            .continuousAnimation = CA
+            .RandomEntry = RE
+            .showidTF = ShowID
+            .ActivatedTF = True
+
+            '.masterCount = MC
+            .gifOpacity = OP
+
+            .arrSpeed(0) = .SpeedLR
+            .arrSpeed(1) = .SpeedUD
+            .startLeft = .seqMoveLR
+
+            .Rotate_ME(rotateTF)
+
+            If Path.GetExtension(.gifBGI) = ".gif" Then
+                If CA Then .Start_Frames() 'Else .Set_pngIndex(0) : .Start_FrameSet(.gifBGI)
+                'If CA Then .Start_ImG_Frames()
+            Else
+                If .flipMe Then .gifImage = Flip_Me("RotateNoneFlipX", .gifImage)
+            End If
+
+            If Bounce Then .Bounce()
+            .Post_Load()
+
+            If hasFrames Then
+                '.Do_Frames_Array(LOImg(i), .gifBGI, .maxFrames)
+                'If Not CA Then .Set_iFrames(fixedFrame)
+            End If
+
+            With .timCombined
+                .Interval = TI
+                .Start()
+            End With
+
+
+
+            '.timMonitor.Start()
+            '.timMovement.Start()
+            'MsgBox(.Name & Environment.NewLine & .Left & vbCrLf & Right)
+        End With
+
+        'If isCharTF Then UpDate_tbl_Characrters()
+        _RecNO = -1
+        mainForm.activeImgIdx = i
+
+
+        idxImg += 1
+        CountToImg += 1
+        'Refresh_Total_Images()
+    End Sub
+
+    Private Sub Start()
+        'Dim BGI As String = imagePATH & "\BackGround\space_scene 5403.jpg"
+        'BackgroundImage = Image.FromFile(BGI)
+
+        Try
+            If Get_LOimg_ID("Flash") >= 0 Then
+                With LOImg(Get_LOimg_ID("Flash"))
+                    .Left = (mainForm.width - .Width) / 2
+                    .Top = mainForm.height - .Height * 3
+                    '.Set_Interval(350)
+                    '.TI = 50
+                    .fixedIndex = 0
+                    .setIndexTF = False
+                    .Fixed = False
+                    .SpeedLR = 30
+                    .seqMoveLR = EAST
+                    .seqNext = 1
+                End With
+            End If
+
+            If Get_LOimg_ID("IM3") >= 0 Then
+                With LOImg(Get_LOimg_ID("IM3"))
+                    .Left = Convert.ToInt32(mainForm.width * 0.72)
+                    .Top = mainForm.height - .Height * 3
+                    '.Set_Interval(500)
+                    .fixedIndex = 0
+                    .setIndexTF = False
+                    .Fixed = False
+                    .SpeedLR = 20
+                    .seqMoveLR = 99
+                    .seqNext = 1
+                End With
+            End If
+
+            If Get_LOimg_ID("IM4") >= 0 Then
+                With LOImg(Get_LOimg_ID("IM4"))
+                    ' .Left =mainForm.left * 0.72
+                    '.Top = mainForm.height - .Height * 3
+                    .showidTF = True
+                    .Set_Interval(300)
+                    .fixedIndex = 0
+                    .setIndexTF = False
+                    .Fixed = False
+                    .seqMoveLR = EAST
+                    .seqNext = 1
+                End With
+            End If
+
+            If Get_LOimg_ID("Fighting BackGround") >= 0 Then
+                With LOImg(Get_LOimg_ID("Fighting BackGround"))
+                    ' .Left = 0 '(mainForm.width - .Width) / 2
+                    ' .Top = mainForm.height - .Height
+                    '.Set_Interval(500)
+                    '.fixedIndex = 0
+                    '.setIndexTF = True
+                    '.Fixed = False
+                    '.seqMoveLR = 99
+                    .setSizeManuallyTF = True
+                    .Set_Size(mainForm.width, mainForm.height)
+                    .seqNext = 1
+                End With
+            End If
+
+
+
+
+            'Populate_dgvLOIMG_From_LOImg()
+        Catch ex As Exception
+            'Trigger_Warning("Sub Start" & vbCrLf & LOImg.Count - 1 & vbCrLf & ex.Message)
+            MsgBox("Sub Start" & vbCrLf & LOImg.Count - 1 & vbCrLf & ex.Message)
+        End Try
+    End Sub
+
+
+    Public Shared Function SafeImageFromFile(ByVal path As String) As Image
+        Dim bytes = File.ReadAllBytes(path)
+        Using ms As New MemoryStream(bytes)
+            Dim img = Image.FromStream(ms)
+            Return img
+        End Using
+    End Function
+
+    Public Function Get_LOimg_ID(ByVal Nme As String) As Integer
+        Dim idx = -1
+
+        For i = 0 To LOImg.Count - 1
+            Try
+                If UCase(LOImg(i).Name) = UCase(Nme) Then idx = i : Exit For
+            Catch ex As Exception
+                MsgBox(ex.Message)
+                'Dim CallingMethod As System.Diagnostics.StackTrace = New System.Diagnostics.StackTrace
+                'Dim CurrentMethod As String = System.Reflection.MethodBase.GetCurrentMethod().Name
+                'Trigger_Warning("Calling: " & CallingMethod.GetFrame(1).GetMethod.Name & vbCrLf & "Current: " & CurrentMethod & vbCrLf & ex.Message)
+            End Try
+        Next
+
+        Return idx
+    End Function
+
+    Public Function GET_mainForm_BOUNDS(ByVal Edge As String) As Integer ', ByVal ID As Integer
+        Dim L As Integer = Nothing
+
+        Select Case Edge
+            Case "LEFT"
+                L = 0 '-LOImg(ID).Width
+            Case "RIGHT"
+                L = mainForm.Width
+        End Select
+        'Label1.Text = Edge & Space(3) & L
+        Return L
+    End Function
+
+    '## Change Sequence ##
+    Public Sub Change_Sequence(ByVal ID As Integer, ByVal seqAction As Integer)
+        Try
+            Select Case ID
+
+
+
+
+                '## END MAIN SELECT ##
+            End Select ' Main Select
+
+        Catch ex As Exception
+            'Text = ex.Message
+            mainForm.lblinfo.text = "change seq ID: " & ID & " seqAction: [" & seqAction & "]" & vbCrLf & ex.Message
+        End Try
+    End Sub
+#End Region
+
+    '## cmsMain - Menu Items ##
+    Private Sub tsmMoveModeBTN_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles tsmMoveModeBTN.Click
+        If MoveModeTF Then
+            MoveModeTF = False : tsmMoveModeBTN.Text = "Move Mode OFF"
+            picMoveMode.Image = My.Resources.Red_Light_ON
+        Else
+            MoveModeTF = True : tsmMoveModeBTN.Text = "Move Mode ON"
+            picMoveMode.Image = My.Resources.Green_Light_ON
+
+        End If
+
+    End Sub
+
+    Private Sub tsmSizeModeBTN_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsmSizeModeBTN.Click
+        If SizeModeTF Then
+            SizeModeTF = False : tsmSizeModeBTN.Text = "Size Mode OFF"
+            picSizeMode.Image = My.Resources.Red_Light_ON
+        Else
+            SizeModeTF = True : tsmSizeModeBTN.Text = "Size Mode ON"
+            picSizeMode.Image = My.Resources.Green_Light_ON
+
+        End If
+    End Sub
+
+    Private Sub cmbElement_SelectedValueChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles cmbElement.SelectedValueChanged
+        activeImgIdx = cmbElement.SelectedIndex
+    End Sub
+
+    Private Sub tsmShowHideControls_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tsmShowHideControlsBTN.Click
+        If panControls.Visible Then panControls.Hide() Else panControls.Show()
+        panControls.Size = New Size(314, 211)
+        panControls.Location = New Point((Width - panControls.Width) / 2, (Height - panControls.Height) / 2)
+    End Sub
+End Class

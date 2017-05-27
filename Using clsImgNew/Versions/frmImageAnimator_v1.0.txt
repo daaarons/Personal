@@ -1,0 +1,97 @@
+﻿Imports System
+Imports System.Drawing
+
+Public Class frmImageAnimator
+    Dim BGI As String = "iron-walk.gif"
+    Dim im As Bitmap = New Bitmap(BGI)
+    Dim check As Boolean = False
+    Dim m_Left As Integer = 0
+    'Public LOImg As New List(Of struPerson)()
+    Public LOImg As New List(Of clsImg)()
+    Public LOPerson As New List(Of struPerson)()
+    Public CountTO As Integer = 4
+    'Dim Counter As Integer = -1
+
+    Private Sub frmImageAnimator_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        DoubleBuffered = True
+        WindowState = FormWindowState.Maximized
+        'Dim p As Person = records(0)
+        'p.first = "Papa"
+        'records(0) = p
+
+        For i = 0 To CountTO
+            Dim p As struPerson = New struPerson
+            With p
+                ' .ID = i
+                ' .Name = "IM" + i
+            End With
+            'records(0) = p
+
+            LOImg.Add(New clsImg())
+            With LOImg(i)
+                .ID = i
+                .Name = "IM" + i.ToString()
+                .gifBGI = BGI
+                .gifImage = Image.FromFile(BGI)
+                .Width = .gifImage.Width
+                .Left = .Width * 10
+                .Top = .Height * 10
+
+            End With
+        Next
+    End Sub
+
+    Private Sub OnFrameChanged(ByVal o As Object, ByVal e As EventArgs)
+        Me.Invalidate()
+    End Sub
+
+    Private Sub animateImage()
+        If Not (check) Then
+            'ImageAnimator.Animate(im, AddressOf Me.OnFrameChanged)
+            'check = True
+        End If
+    End Sub
+
+    Private Sub animateImage(ByVal i As Integer)
+        If Not (check) Then
+            ImageAnimator.Animate(LOImg(i).gifImage, AddressOf Me.OnFrameChanged)
+            check = True
+        End If
+    End Sub
+
+    Protected Overrides Sub OnPaint(ByVal e As PaintEventArgs)
+        For i = 0 To 4
+            Label1.Text = m_Left & vbCrLf & Right & "," & Width
+
+            e.Graphics.DrawImage(LOImg(i).gifImage, New Point(LOImg(i).Left, LOImg(i).Top))
+            LOImg(i).Left += 10
+
+            If LOImg(i).Left >= Right Then LOImg(i).Left = -LOImg(i).gifImage.Width * i
+            animateImage(i)
+            ImageAnimator.UpdateFrames((LOImg(i).gifImage))
+
+        Next
+    End Sub
+
+    Structure struPerson
+        Public ID As Integer
+        Public Name As String
+        Public Left As Integer
+        Public Top As Integer
+        Public Width, Height As Integer
+        Public gifImage As Image
+        Public gifBGI As String
+
+    End Structure
+
+    Class clsImg
+        Public ID As Integer
+        Public Name As String
+        Public Left As Integer
+        Public Top As Integer
+        Public Width, Height As Integer
+        Public gifImage As Image
+        Public gifBGI As String
+    End Class
+
+End Class
